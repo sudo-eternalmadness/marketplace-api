@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
 
 
 class Settings(BaseSettings):
@@ -8,6 +9,8 @@ class Settings(BaseSettings):
 
     db_url: str = "sqlite:///./db.sqlite3"
     app_name: str = "Marketplace API"
+    access_token_expire_minutes: float = 15
+    secret_key: SecretStr
 
 
 settings = Settings()
