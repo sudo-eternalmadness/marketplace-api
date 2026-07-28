@@ -42,8 +42,7 @@ def edit_product(db: SessionDep, product_id: int, product_edit: ProductUpdate):
             status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
         )
     update_data = product_edit.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(product, field, value)
+    product.sqlmodel_update(update_data)
     db.commit()
     db.refresh(product)
     return product

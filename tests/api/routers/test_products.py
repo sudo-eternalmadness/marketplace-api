@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session
-from tests.utils.product import create_product
+from tests.utils import create_product
 
 
 def test_create_product(client: TestClient) -> None:
