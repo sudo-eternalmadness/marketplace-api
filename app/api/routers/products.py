@@ -1,6 +1,13 @@
-from sqlmodel import select
-from fastapi import APIRouter, status, HTTPException
-from app.models import Product, ProductUpdate, ProductCreate
+from sqlmodel import select, func, col
+from typing import Annotated
+from fastapi import APIRouter, status, HTTPException, Query
+from app.models import (
+    Product,
+    ProductUpdate,
+    ProductCreate,
+    ProductsPublic,
+    ProductFilters,
+)
 
 from ..deps import SessionDep
 
@@ -10,9 +17,22 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[Product])
-def get_products(db: SessionDep):
-    return db.exec(select(Product)).all()
+@router.get("", response_model=ProductsPublic)
+def get_products(db: SessionDep, filters: Annotated[ProductFilters, Query()]):
+    stmt = select(Product)
+    count_stmt = select(func.count()).select_from(Product)
+    if filters.q:
+        # same filter on both statements: total must count matches, not all rows
+        name_matches = col(Product.name).icontains(filters.q)
+        stmt = stmt.where(name_matches)
+        count_stmt = count_stmt.where(name_matches)
+    products = db.exec(
+        stmt.order_by(col(Product.added_at).desc(), col(Product.id).desc())
+        .offset(filters.skip)
+        .limit(filters.limit)
+    ).all()
+    total = db.exec(count_stmt).one()
+    return ProductsPublic(data=list(products), total=total)
 
 
 @router.get("/{product_id}", response_model=Product)

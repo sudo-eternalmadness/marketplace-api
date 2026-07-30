@@ -10,7 +10,7 @@ def get_dt_utc() -> datetime:
 
 
 class ProductBase(SQLModel):
-    name: str = Field(min_length=1, max_length=40)
+    name: str = Field(min_length=1, max_length=40, index=True)
     price: int = Field(gt=0)
     description: str | None = Field(default=None)
 
@@ -33,6 +33,17 @@ class Product(ProductBase, table=True):
         default_factory=get_dt_utc,
         sa_type=DateTime(timezone=True),  # ty: ignore
     )
+
+
+class ProductsPublic(SQLModel):
+    data: list[Product]
+    total: int
+
+
+class ProductFilters(SQLModel):
+    q: str | None = Field(min_length=1, max_length=40, default=None)
+    skip: int = Field(ge=0, default=0)
+    limit: int = Field(ge=1, le=100, default=36)
 
 
 class UserBase(SQLModel):

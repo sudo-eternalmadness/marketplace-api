@@ -15,7 +15,7 @@ def make_access_token(
 ) -> Token:
     bad_credentials = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect email or password",
+        detail="Incorrect email or password",  # generic error to avoid revealing app's state
         headers={"WWW-Authenticate": "Bearer"},
     )
     user = get_user_by_email(

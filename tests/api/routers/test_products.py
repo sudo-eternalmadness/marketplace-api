@@ -24,14 +24,17 @@ def test_create_product_invalid_price(client: TestClient) -> None:
 def test_read_products(client: TestClient, session: Session) -> None:
     create_product(session, name="Widget", price=100, description="A widget")
     create_product(session, name="Gizmo", price=200, description=None)
+
     response = client.get("/products")
+
     assert response.status_code == 200
     content = response.json()
-    assert len(content) == 2
-    assert {p["name"] for p in content} == {"Widget", "Gizmo"}
-    assert {p["price"] for p in content} == {100, 200}
-    assert {p["description"] for p in content} == {"A widget", None}
-    for product in content:
+    products = content["data"]
+    assert content["total"] == 2
+    assert {p["name"] for p in products} == {"Widget", "Gizmo"}
+    assert {p["price"] for p in products} == {100, 200}
+    assert {p["description"] for p in products} == {"A widget", None}
+    for product in products:
         assert "id" in product
         assert "added_at" in product
 
@@ -84,3 +87,23 @@ def test_delete_product_not_found(client: TestClient) -> None:
     response = client.delete("/products/999")
     assert response.status_code == 404
     assert response.json()["detail"] == "Product not found"
+
+
+def test_read_products_limit_over_max(client: TestClient) -> None:
+    response = client.get("/products", params={"limit": 101})
+    assert response.status_code == 422
+
+
+def test_read_products_search_counts_only_matches(
+    client: TestClient, session: Session
+) -> None:
+    create_product(session, name="Widget")
+    create_product(session, name="Gadget")
+    create_product(session, name="Gizmo")
+
+    response = client.get("/products", params={"q": "get"})
+
+    assert response.status_code == 200
+    content = response.json()
+    assert {p["name"] for p in content["data"]} == {"Widget", "Gadget"}
+    assert content["total"] == 2
