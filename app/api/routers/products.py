@@ -1,7 +1,7 @@
 from sqlmodel import select, func, col
 from typing import Annotated
 from fastapi import APIRouter, status, HTTPException, Query
-from app.models import (
+from app.models.product import (
     Product,
     ProductUpdate,
     ProductCreate,
@@ -27,7 +27,7 @@ def get_products(db: SessionDep, filters: Annotated[ProductFilters, Query()]):
         stmt = stmt.where(name_matches)
         count_stmt = count_stmt.where(name_matches)
     products = db.exec(
-        stmt.order_by(col(Product.added_at).desc(), col(Product.id).desc())
+        stmt.order_by(col(Product.created_at).desc(), col(Product.id).desc())
         .offset(filters.skip)
         .limit(filters.limit)
     ).all()
@@ -77,4 +77,3 @@ def delete_product(db: SessionDep, product_id: int):
         )
     db.delete(product)
     db.commit()
-    return product

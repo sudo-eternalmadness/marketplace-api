@@ -1,5 +1,8 @@
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
+
+from app.models.cart import UserProductLink
+from app.models.user import User
 from tests.utils import create_product
 
 
@@ -10,10 +13,10 @@ def test_create_product(client: TestClient) -> None:
     assert response.status_code == 201
     content = response.json()
     assert content["name"] == "Gadget"
-    assert content["price"] == 250
+    assert content["price"] == "250.00"
     assert content["description"] == "A gadget"
     assert isinstance(content["id"], int)
-    assert content["added_at"] is not None
+    assert content["created_at"] is not None
 
 
 def test_create_product_invalid_price(client: TestClient) -> None:
@@ -32,11 +35,11 @@ def test_read_products(client: TestClient, session: Session) -> None:
     products = content["data"]
     assert content["total"] == 2
     assert {p["name"] for p in products} == {"Widget", "Gizmo"}
-    assert {p["price"] for p in products} == {100, 200}
+    assert {p["price"] for p in products} == {"100.00", "200.00"}
     assert {p["description"] for p in products} == {"A widget", None}
     for product in products:
         assert "id" in product
-        assert "added_at" in product
+        assert "created_at" in product
 
 
 def test_read_product(client: TestClient, session: Session) -> None:
@@ -46,9 +49,9 @@ def test_read_product(client: TestClient, session: Session) -> None:
     content = response.json()
     assert content["id"] == product.id
     assert content["name"] == product.name
-    assert content["price"] == product.price
+    assert content["price"] == str(product.price)
     assert content["description"] == product.description
-    assert content["added_at"] == product.added_at.isoformat()
+    assert content["created_at"] == product.created_at.isoformat()
 
 
 def test_read_product_not_found(client: TestClient) -> None:
@@ -63,10 +66,10 @@ def test_update_product(client: TestClient, session: Session) -> None:
     assert response.status_code == 200
     content = response.json()
     assert content["id"] == product.id
-    assert content["price"] == 150
+    assert content["price"] == "150.00"
     assert content["name"] == "Widget"
     assert content["description"] == "A widget"
-    assert content["added_at"] == product.added_at.isoformat()
+    assert content["created_at"] == product.created_at.isoformat()
 
 
 def test_update_product_not_found(client: TestClient) -> None:
@@ -81,6 +84,22 @@ def test_delete_product(client: TestClient, session: Session) -> None:
     assert response.status_code == 204
     response = client.get(f"/products/{product.id}")
     assert response.status_code == 404
+
+
+def test_delete_product_in_a_cart_cascades_to_links(
+    client: TestClient, session: Session
+) -> None:
+    product = create_product(session)
+    user = User(email="shopper@example.com", hashed_password="notreal")
+    session.add(user)
+    session.commit()
+    session.add(UserProductLink(user_id=user.id, product_id=product.id, quantity=2))
+    session.commit()
+
+    response = client.delete(f"/products/{product.id}")
+
+    assert response.status_code == 204
+    assert session.exec(select(UserProductLink)).all() == []
 
 
 def test_delete_product_not_found(client: TestClient) -> None:

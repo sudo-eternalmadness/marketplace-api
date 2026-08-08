@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from ..deps import SessionDep
-from app.models import Token
+from app.models.user import Token
 from app.core.security import verify_password, create_access_token, DUMMY_HASH
 from app.crud import get_user_by_email
 from typing import Annotated

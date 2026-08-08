@@ -21,7 +21,10 @@ Linting, type-checking (`ruff check`, `ruff format`, `ty`) and the test suite al
 
 Standard FastAPI layering, one file per concern:
 
-- `app/models.py` — SQLModel entities and their Create/Update/Public schema variants (single file, not split per-entity)
+- `app/models/` — SQLModel entities and their Create/Update/Public schema variants, one module per
+  resource (`product.py`, `user.py`, `cart.py`, `token.py`; `base.py` holds shared helpers).
+  `__init__.py` is empty; import directly from the submodule (`from app.models.product import Product`).
+  Cross-module relationships use `TYPE_CHECKING` imports with string annotations to avoid import cycles
 - `app/crud.py` — DB read/write functions, framework-agnostic (no `HTTPException`s here) , for preventing DRY violations
 - `app/api/routers/` — one router per resource; HTTP concerns (status codes, `HTTPException`) live here
 - `app/api/deps.py` — shared FastAPI dependencies (`SessionDep`, `CurrentUser`, auth)

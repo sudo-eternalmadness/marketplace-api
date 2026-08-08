@@ -1,7 +1,7 @@
 import uuid
 import pytest
 from sqlmodel import select
-from app.models import User, UserCreate
+from app.models.user import User, UserCreate
 from app.core.security import verify_password
 from app import crud
 from tests.utils import get_fake_user

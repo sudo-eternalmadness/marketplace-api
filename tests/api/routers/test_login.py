@@ -3,7 +3,7 @@ from pytest_mock import MockerFixture
 from app.crud import create_user
 from sqlmodel import Session
 from tests.utils import get_fake_user
-from app.models import UserCreate
+from app.models.user import UserCreate
 from app.core.security import verify_access_token, DUMMY_HASH
 from app.api.routers import login
 

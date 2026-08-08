@@ -4,7 +4,7 @@ from sqlmodel import Session
 from app.core.db import engine
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from app.models import User
+from app.models.user import User
 from app.core.security import verify_access_token
 import jwt
 

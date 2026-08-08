@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from ..deps import SessionDep, CurrentUser
-from app.models import UserCreate, UserPublic
+from app.models.user import UserCreate, UserPublic
 from app import crud
 
 router = APIRouter(prefix="/users", tags=["users"])
